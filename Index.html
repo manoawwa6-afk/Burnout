@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Battery Check: a burnout game</title>
+<meta name="description" content="Battery Check is a free interactive game that teaches how to spot and prevent burnout. Play office, night shift, exam week and remote work scenarios.">
+<meta property="og:title" content="Battery Check: a burnout game">
+<meta property="og:description" content="Make the calls and see how long your battery lasts. A free game about burnout for students and professionals.">
+<meta property="og:type" content="website">
+<style>
+:root{--bg:#EEF3F5;--ink:#1F2A44;--card:#FFFFFF;--line:#D3DDE3;--muted:#566077;--good:#1F8A7D;--warn:#C9811A;--bad:#CC4B3A;--hero:#1F2A44;--heroink:#FFFFFF;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121A2B;--ink:#EAF0F4;--card:#1B2740;--line:#2C3B5A;--muted:#A3AEC2;--good:#4CC3B3;--warn:#F4B860;--bad:#F0795F;--hero:#0B1220;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121A2B;--ink:#EAF0F4;--card:#1B2740;--line:#2C3B5A;--muted:#A3AEC2;--good:#4CC3B3;--warn:#F4B860;--bad:#F0795F;--hero:#0B1220;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif}
+h1,h2,h3,.q,.pct,.brand{font-family:Georgia,"Times New Roman",serif;line-height:1.2}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;max-width:860px;margin:0 auto}
+.brand{font-size:1.25rem;font-weight:700;color:var(--ink);text-decoration:none}
+nav a{color:var(--muted);text-decoration:none;margin-left:16px;font-size:.95rem}
+nav a:hover{color:var(--ink)}
+.hero{background:var(--hero);color:var(--heroink)}
+.hero .wrap{padding-top:36px;padding-bottom:44px}
+.hero h1{font-size:clamp(2rem,6vw,3.1rem);margin:0 0 12px;max-width:16em}
+.hero p{max-width:34em;margin:0 0 22px;opacity:.88;font-size:1.1rem}
+.meter{display:flex;align-items:center;gap:12px;margin:6px 0 20px}
+.batt{position:relative;flex:1;height:52px;border:3px solid currentColor;border-radius:12px;padding:4px}
+.batt::after{content:"";position:absolute;right:-11px;top:14px;width:8px;height:18px;background:currentColor;border-radius:0 3px 3px 0}
+.fill{height:100%;border-radius:6px;background:var(--good);width:12%;transition:width .7s ease,background .4s}
+.pct{font-size:1.7rem;font-weight:700;min-width:3.4ch;text-align:right}
+.hero .meter{max-width:420px}
+section{padding:36px 0}
+h2{font-size:1.7rem;margin:0 0 6px}
+.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.sc h3{margin:6px 0 4px;font-size:1.25rem}
+.sc .em{font-size:1.9rem}
+.sc p{margin:0 0 14px;color:var(--muted);font-size:.97rem}
+.best{font-size:.88rem;color:var(--muted);margin-top:8px;min-height:1.3em}
+button{font:inherit;color:inherit;text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:13px 15px;cursor:pointer;min-height:48px}
+button:hover:not(:disabled){border-color:var(--ink)}
+button:focus-visible,a:focus-visible{outline:3px solid var(--good);outline-offset:2px}
+button:disabled{cursor:default;opacity:.55}
+button.picked{opacity:1;border-color:var(--ink);background:var(--card)}
+.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);text-align:center;font-weight:600;width:100%}
+.primary:hover:not(:disabled){opacity:.88}
+.link{background:none;border:none;color:var(--muted);padding:8px 0;min-height:0;text-decoration:underline;width:auto}
+#play,#end{max-width:640px;margin:0 auto;padding:24px 20px 44px}
+.hud{display:flex;justify-content:space-between;font-size:.95rem;color:var(--muted);margin-bottom:6px;gap:10px}
+.when{color:var(--muted);font-size:.95rem;margin-bottom:6px}
+.q{font-size:1.4rem;margin:0 0 18px}
+.opts{display:grid;gap:10px}
+.fb{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.fb .primary{margin-top:4px}
+.delta{font:700 1.3rem Georgia,serif}
+.delta.up{color:var(--good)}.delta.down{color:var(--bad)}
+.stat{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.stat div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;flex:1;min-width:120px}
+.stat b{display:block;font:700 1.5rem Georgia,serif}
+.hidden{display:none}
+.learn h3{margin:0 0 4px;font-size:1.1rem}.learn p{margin:0;color:var(--muted);font-size:.96rem}
+footer{border-top:1px solid var(--line);padding:22px 0 34px;color:var(--muted);font-size:.9rem}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div id="home">
+  <div class="hero">
+    <header><a class="brand" href="#home">Battery Check</a><nav><a href="#scenarios">Play</a><a href="#learn">About burnout</a><a href="#help">Get support</a></nav></header>
+    <div class="wrap">
+      <h1>How long can your battery last?</h1>
+      <p>Pick a scenario and make the calls. Pushing through earns more output today, but costs energy you will need tomorrow.</p>
+      <div class="meter"><div class="batt"><div class="fill"></div></div><div class="pct">12%</div></div>
+      <button class="primary" style="max-width:260px" onclick="location.hash='scenarios'">Choose a scenario</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <section id="scenarios">
+      <h2>Choose a scenario</h2>
+      <p class="muted">Each one takes about 2 minutes. Try them all and compare your results.</p>
+      <div class="grid" id="cards"></div>
+    </section>
+    <section id="learn" class="learn">
+      <h2>About burnout</h2>
+      <p class="muted">The WHO describes burnout as an occupational phenomenon caused by chronic workplace stress that has not been successfully managed.</p>
+      <div class="grid">
+        <div class="card"><h3>Exhaustion</h3><p>Drained, tired all the time, sleeping badly.</p></div>
+        <div class="card"><h3>Cynicism</h3><p>Detached and negative about the work and people.</p></div>
+        <div class="card"><h3>Low efficacy</h3><p>Self-doubt, more mistakes, less getting done.</p></div>
+      </div>
+    </section>
+    <section id="help">
+      <h2>Get support</h2>
+      <p>If this feels familiar, talk early to your manager, HR partner, or your employee assistance program. Most burnout is caused by the workplace, not by personal weakness. If you are in crisis, contact your local emergency number or a crisis line.</p>
+    </section>
+    <footer>A teaching game about workplace wellbeing. It is not medical advice.</footer>
+  </div>
+</div>
+
+<div id="play" class="hidden">
+  <div class="hud"><span id="prog"></span><span id="out"></span></div>
+  <div class="meter"><div class="batt"><div class="fill" id="fill"></div></div><div class="pct" id="pct"></div></div>
+  <div class="card">
+    <div class="when" id="when"></div>
+    <p class="q" id="q"></p>
+    <div class="opts" id="opts"></div>
+    <div class="fb hidden" id="fb" aria-live="polite">
+      <div class="delta" id="delta"></div>
+      <p id="why"></p>
+      <button class="primary" id="next">Next</button>
+    </div>
+  </div>
+  <button class="link" id="quit">Back to scenarios</button>
+</div>
+
+<div id="end" class="hidden">
+  <h2 id="etitle"></h2>
+  <div class="meter"><div class="batt"><div class="fill" id="efill"></div></div><div class="pct" id="epct"></div></div>
+  <p id="etext"></p>
+  <div class="stat"><div><b id="eout"></b>output</div><div><b id="ehealthy"></b>healthy choices</div></div>
+  <button class="primary" id="again">Play this scenario again</button>
+  <button class="link" id="other">Try another scenario</button>
+</div>
+
+<script>
+var SC=[
+{n:"The busy office",em:"\uD83C\uDFE2",b:"Piled-up projects, endless email and a Friday that never ends.",s:75,m:[
+["Monday, 9:00","Your manager hands you a big new project. Your plate is already full.",[["Say yes and figure it out later",-20,15,0,"Taking on work without discussing capacity is how workload creeps up."],["Ask what to put on hold",-5,9,1,"Negotiating priorities keeps the workload realistic."],["Say yes and work evenings",-26,13,0,"Evening catch-up work eats the recovery time you need."]]],
+["Monday, 12:30","It is lunchtime and your inbox is overflowing.",[["Eat at your desk and reply",-10,6,0,"Working through breaks adds up to fatigue."],["Take a 30 minute walk",10,2,1,"Real breaks restore focus and mood."],["Skip lunch and push on",-16,9,0,"Skipping breaks is a classic early warning sign."]]],
+["Tuesday, 6:15 pm","A colleague emails a non-urgent request as you leave.",[["Reply right away",-12,5,0,"Instant replies teach everyone you are always on."],["Reply first thing tomorrow",4,3,1,"Clear boundaries protect your evenings."],["Stay late to finish it",-18,9,0,"Regular late nights are a fast route to exhaustion."]]],
+["Thursday, 10:00","You have 12 unused vacation days and a deadline is looming.",[["Cancel your day off",-22,12,0,"Skipping time off is one of the biggest energy drains."],["Take the day off",20,0,1,"Time away is how a battery recharges."],["Take it but check email",-5,4,0,"Half-off is not off. You never fully disconnect."]]],
+["Friday, 5:00 pm","The weekend starts but the work chat keeps pinging.",[["Mute it until Monday",12,0,1,"Switching off fully lets you recover."],["Keep glancing at it",-10,4,0,"Constant checking keeps your stress response on."],["Plan to work Saturday",-20,10,0,"Weekend work leaves no recovery before Monday."]]]]},
+{n:"The night shift",em:"\uD83E\uDE7A",b:"Short staffing, hard cases and sleep on a broken schedule.",s:65,m:[
+["2:00 am","The ward is short-staffed and you are offered a double shift.",[["Accept the extra shift",-24,14,0,"Back-to-back shifts raise exhaustion and the risk of errors."],["Decline and flag the staffing gap",-3,6,1,"Raising gaps protects you and your patients."],["Accept and skip sleep after",-30,12,0,"Skipping recovery sleep compounds the damage."]]],
+["3:30 am","You finally have a 15 minute break.",[["Catch up on charting",-12,7,0,"Working through breaks leaves nothing in reserve."],["Sit somewhere quiet and rest",8,2,1,"Short real breaks help you last the shift."],["Skip it to cover a colleague",-14,6,0,"Covering for a broken system drains you."]]],
+["5:00 am","A patient you cared for has died.",[["Bottle it up and keep going",-14,3,0,"Unprocessed distress builds up over time."],["Debrief with a colleague or supervisor",8,1,1,"Talking it through is a protective habit."],["Tell yourself to toughen up",-12,0,0,"Harsh self-criticism deepens exhaustion."]]],
+["Your day off","A colleague asks you to swap onto their shift.",[["Swap and rest later",-18,10,0,"Rest you postpone rarely happens."],["Say no kindly",14,0,1,"Protecting rest days is not selfish."],["Swap but plan a nap",-8,6,0,"A nap helps, but it does not replace a day off."]]],
+["Home, 9:00 am","You cannot sleep and dread the next shift.",[["Scroll until you crash",-12,0,0,"Late scrolling delays the sleep you need."],["Wind down and tell your manager you are struggling",10,1,1,"Asking for support early works best."],["Add extra coffee and push on",-10,3,0,"Caffeine masks tiredness but does not fix it."]]]]},
+{n:"Exam week",em:"\uD83C\uDF93",b:"Deadlines, group projects and not enough sleep.",s:75,m:[
+["Sunday night","Midterms start tomorrow and you feel behind.",[["Pull an all-nighter",-24,12,0,"All-nighters hurt memory and focus the next day."],["Make a plan with breaks and sleep",4,8,1,"A plan and rest beat last-minute panic."],["Panic and scroll your phone",-12,-2,0,"Doomscrolling adds stress without progress."]]],
+["Monday","A group project teammate is not pulling their weight.",[["Quietly do their part",-18,10,0,"Absorbing others\u2019 work leads to resentment and overload."],["Talk and agree clear tasks",-2,7,1,"A direct conversation clears up expectations."],["Stew about it silently",-10,0,0,"Silent resentment drains energy."]]],
+["Tuesday","A deadline lands the same day as an exam.",[["Ask your lecturer for an extension early",6,3,1,"Asking early is a skill, not a weakness."],["Run on energy drinks all night",-18,8,0,"Stimulants borrow energy you will pay back."],["Skip class to finish it",-10,6,0,"Missing class creates new problems."]]],
+["Wednesday evening","Friends invite you to dinner. You have a lot to study.",[["Cancel and keep studying",-10,5,0,"Isolation makes stress feel heavier."],["Go for an hour, then study",10,4,1,"Connection recharges you for studying."],["Go but feel guilty all night",-4,0,0,"Guilt cancels most of the benefit of a break."]]],
+["Thursday","You feel flat, cannot focus and dread everything.",[["Hide it and carry on",-12,0,0,"Hiding struggles lets them grow."],["Contact campus counselling or an advisor",12,2,1,"Support services exist for exactly this."],["Compare yourself to classmates",-10,-1,0,"Comparison rarely tells the real story."]]]]},
+{n:"Remote work",em:"\uD83C\uDFE0",b:"The office is your kitchen table and work never really ends.",s:75,m:[
+["Monday, 8:30","Your laptop is on the kitchen table.",[["Work from anywhere, anytime",-10,6,0,"No boundary between home and work means no switching off."],["Set a workspace and start routine",5,5,1,"Routines create the boundary an office used to provide."],["Start at 6 am to prove yourself",-16,9,0,"Overworking to prove yourself is hard to sustain."]]],
+["Tuesday, 8:00 pm","Your team chat pings with a minor question.",[["Answer right away",-10,5,0,"Instant answers set an always-on expectation."],["Set your status to offline",6,3,1,"Visible boundaries are respected more than you expect."],["Answer and keep working",-16,8,0,"One ping becomes a whole evening."]]],
+["Wednesday","Your calendar is back-to-back video calls.",[["Accept everything",-18,10,0,"Meeting overload leaves no time for real work or rest."],["Decline optional calls and add buffers",6,6,1,"Buffers give your brain a reset."],["Multitask during calls",-10,4,0,"Multitasking raises mental fatigue."]]],
+["Thursday","You have not spoken to anyone outside meetings in days.",[["Tough it out",-12,0,0,"Isolation is a known burnout risk."],["Book a call or co-working session",10,2,1,"Connection is a protective factor."],["Bury yourself in work",-14,6,0,"Work cannot replace connection."]]],
+["Friday, 5:30 pm","Your laptop is still open.",[["Close it and go outside",14,0,1,"A shutdown ritual signals that the day is over."],["Just one more hour",-10,4,0,"One more hour usually becomes three."],["Work through the weekend",-20,10,0,"Weekend work removes your recovery window."]]]]}
+];
+var st,cur,$=function(i){return document.getElementById(i)};
+function col(v){return v>=60?"var(--good)":v>=30?"var(--warn)":"var(--bad)"}
+function setB(f,p,v){$(f).style.width=v+"%";$(f).style.background=col(v);$(p).textContent=v+"%"}
+function view(v){["home","play","end"].forEach(function(s){$(s).classList.toggle("hidden",s!==v)});window.scrollTo(0,0)}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function getBest(i){try{return localStorage.getItem("bc-best-"+i)}catch(e){return null}}
+function setBest(i,v){try{var o=getBest(i);if(o===null||v>+o)localStorage.setItem("bc-best-"+i,v)}catch(e){}}
+function cards(){
+ $("cards").innerHTML="";
+ SC.forEach(function(s,i){
+  var c=document.createElement("div");c.className="card sc";
+  var b=getBest(i);
+  c.innerHTML='<div class="em">'+s.em+'</div><h3>'+s.n+'</h3><p>'+s.b+'</p>';
+  var btn=document.createElement("button");btn.className="primary";btn.textContent="Play";btn.onclick=function(){start(i)};
+  var bt=document.createElement("div");bt.className="best";bt.textContent=b!==null?"Your best: "+b+"% battery left":"";
+  c.appendChild(btn);c.appendChild(bt);$("cards").appendChild(c);
+ });
+}
+function start(i){cur=i;st={i:0,e:SC[i].s,u:0,h:0,dead:false};view("play");round()}
+function round(){
+ var m=SC[cur].m[st.i];
+ $("prog").textContent=SC[cur].n+": moment "+(st.i+1)+" of "+SC[cur].m.length;$("out").textContent="Output: "+st.u;
+ setB("fill","pct",st.e);$("when").textContent=m[0];$("q").textContent=m[1];$("fb").classList.add("hidden");
+ var box=$("opts");box.innerHTML="";
+ shuffle(m[2]).forEach(function(o){var b=document.createElement("button");b.textContent=o[0];b.onclick=function(){pick(o,b)};box.appendChild(b)});
+}
+function pick(o,btn){
+ Array.prototype.forEach.call($("opts").children,function(b){b.disabled=true});btn.classList.add("picked");
+ st.e=Math.max(0,Math.min(100,st.e+o[1]));st.u+=o[2];st.h+=o[3];
+ setB("fill","pct",st.e);$("out").textContent="Output: "+st.u;
+ var d=$("delta");d.textContent=(o[1]>=0?"+":"\u2212")+Math.abs(o[1])+" energy";d.className="delta "+(o[1]>=0?"up":"down");
+ $("why").textContent=o[4];st.dead=st.e<=0;
+ var last=st.i===SC[cur].m.length-1;
+ $("next").textContent=(st.dead||last)?"See your result":"Next";
+ $("fb").classList.remove("hidden");$("next").focus();
+}
+function finish(){
+ var e=st.e,t,x;
+ if(st.dead){t="Burned out";x="Your battery hit zero before the end. Output drops fast when energy runs out, and recovery takes far longer than the break you skipped."}
+ else if(e>=65){t="Fully charged";x="You protected your energy and finished strong. Small boundaries, early conversations and real breaks add up."}
+ else if(e>=35){t="Running low";x="You made it, but with little left in the tank. One more heavy week could tip you into the red zone."}
+ else{t="Red zone";x="You survived, barely. This is where exhaustion, cynicism and mistakes creep in. Talk to someone early."}
+ $("etitle").textContent=t;setB("efill","epct",e);$("etext").textContent=x;
+ $("eout").textContent=st.u;$("ehealthy").textContent=st.h+" of "+SC[cur].m.length;
+ setBest(cur,e);view("end");
+}
+$("next").onclick=function(){if(st.dead||st.i===SC[cur].m.length-1){finish()}else{st.i++;round()}};
+$("again").onclick=function(){start(cur)};
+$("other").onclick=function(){cards();view("home");location.hash="scenarios"};
+$("quit").onclick=function(){cards();view("home");location.hash="scenarios"};
+cards();
+</script>
+</body>
+</html>
